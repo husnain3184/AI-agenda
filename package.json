@@ -2,18 +2,18 @@
   "name": "excel-uploader",
   "version": "1.0.0",
   "main": "index.js",
-"scripts": {
-  "start": "node app.js"
-},
+  "scripts": {
+    "dev": "node app.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "date-fns": "^4.1.0",
-    "dotenv": "^17.2.1",
-    "express": "^5.1.0",
-    "multer": "^2.0.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "multer": "^2.0.0",
     "mysql2": "^3.14.3",
     "xlsx": "^0.18.5"
   }
