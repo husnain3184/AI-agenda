@@ -4,16 +4,18 @@ const mysql = require('mysql2/promise');
 const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
+
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 // Default database configuration (fallback)
 let dbConfig = {
-    host: '192.168.14.2',
-    user: 'root',
-    password: 'MMp9ug6e',
-    database: 'clone_db_seed_25_8_26'
+    host: process.env.DB_HOST || '127.0.0.1',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'test_db'
 };
 
 // Configure multer for file uploads
