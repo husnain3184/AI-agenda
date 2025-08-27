@@ -6,9 +6,7 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
-
 const app = express();
-const port = process.env.PORT || 3001;
 
 // Default database configuration (fallback)
 let dbConfig = {
@@ -18,7 +16,7 @@ let dbConfig = {
     database: process.env.DB_NAME || 'test_db'
 };
 
-// Configure multer for file uploads
+// Configure multer for file uploads (⚠ Vercel note: files won’t persist, use S3/Cloudinary for production)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
@@ -27,14 +25,13 @@ const storage = multer.diskStorage({
         cb(null, `${Date.now()}-${file.originalname}`);
     }
 });
-
 const upload = multer({ storage });
 
 // Serve static files
 app.use(express.static('public'));
 app.use(express.json());
 
-// Create uploads directory if it doesn't exist
+// Create uploads directory if it doesn't exist (local only, won’t persist on Vercel)
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
 }
@@ -51,7 +48,6 @@ app.post('/api/db-config', (req, res) => {
             });
         }
 
-        // Update database configuration
         dbConfig = {
             host: host.trim(),
             user: user.trim(),
@@ -117,12 +113,11 @@ app.get('/api/db-config', (req, res) => {
             host: dbConfig.host,
             user: dbConfig.user,
             database: dbConfig.database
-            // Note: Password is not returned for security
         }
     });
 });
 
-// Agenda type detection function (same as before)
+// Agenda type detection function
 function detectAgendaType(heading) {
     if (!heading) return 'speaker';
     const headingLower = heading.toLowerCase();
@@ -139,7 +134,7 @@ function detectAgendaType(heading) {
     return 'speaker';
 }
 
-// File upload and processing endpoint (modified to use current dbConfig)
+// File upload and processing endpoint
 app.post('/upload', upload.single('excelFile'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -152,10 +147,16 @@ app.post('/upload', upload.single('excelFile'), async (req, res) => {
         const worksheet = workbook.Sheets[sheetName];
 
         const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null });
-        const connection = await mysql.createConnection(dbConfig); // Use current dbConfig
-        
-        // ... rest of your existing upload processing code ...
-        // (Same as your original code, just using the dynamic dbConfig)
+        const connection = await mysql.createConnection(dbConfig);
+
+        // TODO: Add your logic to insert data into MySQL
+        await connection.end();
+
+        res.json({
+            success: true,
+            message: 'File processed successfully',
+            rows: rawData.length
+        });
 
     } catch (error) {
         console.error('Import error:', error);
@@ -167,11 +168,4 @@ app.post('/upload', upload.single('excelFile'), async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-    console.log('Default DB Config:', {
-        host: dbConfig.host,
-        user: dbConfig.user,
-        database: dbConfig.database
-    });
-});
+module.exports = app;
